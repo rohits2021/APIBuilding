@@ -1,126 +1,86 @@
-const router = require("express-promise-router");
-const User = require('../models/user');
-const Users = require('../models/users');
-const Car = require('../models/car');
-
-// const Joi  = require('joi')
-// const idSchema = Joi.object().keys({
-//     userId : Joi.string().regex(/^[0-9a-fA-F]{24}$/).required()
-// })
-
+const router         = require("express-promise-router");
+const jwt            = require('jsonwebtoken');
+const JWT_SECRET     = require('../configuration/index');
+const Users          = require('../models/users');
+const hashsed        = require('../helpers/hashPassword');
 
 
 module.exports = {
-    signUp: async (req,res,next)=>{
-        
-        const { email,password} =  req.body;
-
-        //check if user exists with same email
-        const isAlreadyExists = await User.findOne({email})
-        if(isAlreadyExists){
-            //403 Forbidden
-           return res.status(403).json({message:"User already exists,cannot be created again"})
-        }else{
-            //create a user 
-            const newUser = new Users({email,password});
-            await newUser.save();
-
-            //respond with a token instead of message
-           return res.status(201).json({user: "created"})
-        }
-        
+    signUp: async (req,res,next)=>{ 
+            const email = req.body.email;
+            const password = req.body.password;
+            //check if user exists with same email
+            const isAlreadyExists = await Users.findOne({email});
+            if(isAlreadyExists){
+                //403 Forbidden
+                return res.status(403).json({message:"User already exists,cannot be created again"})
+            }else{
+                //create a user
+                const saltHash = hashsed.genPassword(password);
+                const salt =  saltHash.salt;
+                const hash =  saltHash.hash;
+                const newUser = new Users({email,salt,hash});
+                await newUser.save();
+                return res.status(200).json({success:true,msg:'User created with hashed pass'})
+            }
     },
-    signIn: (req,res,next)=>{
-        
+    signIn: async (req,res,next)=>{
+                const email =  req.body.email;
+                const password = req.body.password;
+                const user = await Users.findOne({email});                     
+                if(user){
+                    const isValid = hashsed.validPassword(password,user.hash,user.salt) 
+                    if(isValid){
+                        jwt.sign({user},JWT_SECRET.jwtSecret,{expiresIn:'60s'},(err,token)=>{
+                            res.status(200).json({token:token});
+                        })
+                    }else{
+                        res.status(400).json({success:false,msg:"you have entered a wrong password"});
+                    }
+                }else{
+                        res.status(400).json({success:false,msg:"User doesn't exists"})
+                }
     },
     secret: (req,res,next)=>{
-        
+                res.status(200).json({success:true,msg:"Token is verified!"});
+                jwt.verify(req.token,JWT_SECRET.jwtSecret,(err,authData)=>{
+                    if(err){
+                        res.status(401).json({success:false,msg:"something went wrong!"});
+                    }else{
+                        res.status(200).json({success:true,msg:"Token is verified!"});
+                    }
+                })
     },
-    index: (req,res,next)=>{
-        // 1 Callback way
-        // User.find({},(err,users)=>{
-        //     if(err){
-        //         next(err);
-        //     }
-        //     res.status(200).json(users)
-        // })
-        //2 Promises way
-        User.find({})
-             .then(users => {
-                 //Do smothing with user
-                 res.status(200).json(users)
-             })
-             .catch(err => {
-                 //catch the error
-                 next(err)
-             })
-    },
-    //3 async await
-    index2:  async (req,res,next)=>{
-            const alluser = await User.find()
-            res.status(200).json(alluser) 
-    },
-
-    newUser: (req,res,next)=>{
-        const newUser = new User(req.body);
-        newUser.save((err,user)=>{
-            res.status(201).json(user);
-        })
-    },
-
-    getUser: async (req,res,next)=>{
-       // to get the basic sense of how Joi works!
-       //    const result =  idSchema.validate(req.params);
-       //    console.log(result);
-       const {userId} = req.params;
-       const user = await User.findById(userId);
-       res.status(200).json(user);
-    },
-
-    replaceUser : async (req,res,next)=>{
-        // req.body should contain all number of fields
-        const {userId} = req.params;
-        const newUser  = req.body; 
-        const replaceUser = await User.findByIdAndUpdate(userId,newUser)
-        res.status(200).json({succes : true});
-    },
-
-    updateUser  : async (req,res,next)=>{
-        // req.body may contain any number of fields
-        const {userId} = req.params;
-        const newUser  = req.body; 
-        const replaceUser = await User.findByIdAndUpdate(userId,newUser)
-        res.status(200).json({succes : true});
-    },
-
-
-    getUserCars: async (req,res,next)=>{
-        const {userId} = req.params;
-        const user =  await User.findById(userId).populate('cars');
-        res.status(200).json(user.cars);
-    },
-
-    newUserCar: async (req,res,next)=>{
-        const {userId} = req.params;
-        //create new car
-        const newCar = new Car(req.body);
-        //get a user
-        const user = await User.findById(userId)
-        //Assign user as a seller
-        newCar.seller = user;
-        //save the car
-        await newCar.save();
-        //add car to the user selling array 'cars'
-        user.cars.push(newCar);
-        //Save the user
-        await user.save();
-        res.status(201).json(newCar);
-    }
+    
 }
 
 
 
-// we can interact with mongoose in 3 different ways:
-// 1. Callbacks
-// 2. Promises
-// 3. Async/Await (Promises but with different syntax)
+
+    // index: (req,res,next)=>{
+    //     // 1 Callback way
+    //     // User.find({},(err,users)=>{
+    //     //     if(err){
+    //     //         next(err);
+    //     //     }
+    //     //     res.status(200).json(users)
+    //     // })
+    //     //2 Promises way
+    //     User.find({})
+    //          .then(users => {
+    //              //Do smothing with user
+    //              res.status(200).json(users)
+    //          })
+    //          .catch(err => {
+    //              //catch the error
+    //              next(err)
+    //          })
+    // },
+    // //3 async await
+    // index2:  async (req,res,next)=>{
+    //         const alluser = await User.find()
+    //         res.status(200).json(alluser) 
+    // },
+
+    
+

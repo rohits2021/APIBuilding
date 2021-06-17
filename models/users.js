@@ -6,12 +6,16 @@ const usersSchema = new Schema({
     email     : {
         type : String,
         required: true,
-        unique:  true,
+        lowercase: true,
     },
-    password  : {
+    salt  : {
         type : String,
         required: true,
     },
+    hash : {
+        type:String,
+        required: true,
+    }
     
 })
 

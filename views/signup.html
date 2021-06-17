@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Authentication</title> 
+    <script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script> 
+    <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" 
+    integrity="sha512-+4zCK9k+qNFUR5X+cKL9EIR+ZOhtIloNl9GIKS57V1MyNsYpYcUrUeQc9vNfzsWfV28IaLL3i96P9sdNyeRssA==" 
+    crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Alice&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="iziToast.min.css">
+    <style>
+        :root {
+        --active_color:#e4ccf3;
+        --white: #ddd;;
+        }
+        #allelement {
+        display: flex;
+        flex-direction: column;
+        padding: 30px 20px;
+        border: 1px solid rgb(199, 197, 197);
+        border-radius: 5px;
+        box-shadow: 0px 10px 10px rgba(12, 12, 12, 0.4); 
+        height: max-content;
+        width: 500px;
+        align-items: center;
+        margin-left: 32%;
+        margin-top: 6%; 
+        }
+        .contentDiv{
+        background-color: var(--white);
+        width: 29.06rem;
+        }
+        .container{ 
+        display:block; 
+        padding: 1rem 0.5rem;
+        }
+        .container .group{ 
+        position:relative; 
+        margin-bottom: 1.23rem; 
+        }
+        .container input{
+        font-size:16px;
+        padding: 0.6rem 2rem;
+        margin-left: 1rem;
+        margin-right: 1rem;
+        display:block;
+        width: 22rem;
+        border: 2.3px solid rgba(176, 212, 248, 0.849);
+        border-radius: 5px!important
+        }
+        .container input:focus{ 
+        outline-color: rgb(51, 119, 247); 
+        }
+        .container label{
+        color: rgb(129, 129, 129); 
+        font-size:15px;
+        font-weight:normal;
+        position: relative;
+        pointer-events:none;
+        top: -1.9rem;
+        transition:0.3s ease all; 
+        -moz-transition:0.3s ease all; 
+        -webkit-transition:0.3s ease all;
+        background-color: white;
+        margin-left: 2rem;
+        padding-left: 5px;
+        padding-right: 5px;
+        font-family:'Roboto', sans-serif;
+        }
+        input:focus ~ label,input:valid ~ label {
+        top: -3.62rem;
+        font-size: 15px;
+        color: rgb(51, 119, 247);
+        background-color: var(--white);
+        font-family: 'Roboto', serif;
+        }
+        .btngroup{
+        display: flex;
+        justify-content: space-evenly;
+        }
+        .btngroup button{
+        width: 7rem;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        }
+        .btngroup button[type="submit"]{
+            background-color: #388e3c;   
+        }
+        .btngroup button[type="submit"]:hover{
+        background-color: #29692c;   
+        }
+        .btngroup button[type="reset"]{
+            background-color: #ff7043; 
+        }
+        .btngroup button[type="reset"]:hover{
+        background-color: #e45023; 
+        }
+        .btngroup button:focus{
+        outline: none;
+        }
+        .group span{
+        color:  rgb(255, 52, 52); 
+        font-size:11px;
+        font-weight: bold;
+        position: relative;
+        pointer-events:none;
+        margin-left: 1rem;
+        padding-left: 5px;
+        padding-right: 5px;
+        width: 10rem;
+        font-family:'Roboto', sans-serif;
+        }
+        
+    </style>
+</head>
+<body>
+    <div id="allelement">           
+        <div class="contentDiv"> 
+          <h2 style="text-align: center;font-family: Roboto;color: #5c5a5a;">Sign Up</h2>   
+          <div id="SignIn" class="tabcontent">
+            <div  class="container">
+              <form method="POST" action="/users/signup">
+                <div class="group">      
+                  <input type="email" required name="email">                 
+                  <label>Email</label>
+                </div>
+                  
+                <div class="group">      
+                  <input type="password" required name="password">
+                  <label>Password</label>
+                </div>
+
+                <div class="group btngroup" >      
+                  <button type="submit" id="signUpSubmit">Submit</button>
+                  <button type="reset">Reset</button>
+                </div>
+              </form>         
+           </div>
+          </div>
+          <p style="text-align: center;font-family: Roboto;color: #8cd0f8;">
+          <a href="http://localhost:3000/login">
+            Already have an account?Go to Login Page 
+          </a>
+          </p>
+        </div>
+      </div>
+      <script src="iziToast.min.js" type="text/javascript"></script>
+      <script>
+        
+      </script>
+</body>
+</html>
