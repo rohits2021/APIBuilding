@@ -1,38 +1,20 @@
 const express   = require('express');
 const app       = express();
-const path      = require('path');
-const cons      = require('consolidate');
+const morgan    = require('morgan');
 const users     = require('./routes/users');
-const mongoose  = require('mongoose');
-
-mongoose.connect('mongodb://localhost:27017/auth',
-                   {useNewUrlParser: true,
-                    useUnifiedTopology: true,
-                    useFindAndModify:false}
-                ).then(()=>{
-                    console.log('Database is Connected')
-                });
-
-//set view Engine
-app.engine('html', cons.swig)
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'html');
-
+const todos     = require('./routes/todos');
+const cors      = require('cors');
+require('dotenv').config();
+const dbConfig   = require('./configuration/db');
+          
 //Middleware
 app.use(express.json());
-app.use(express.urlencoded({extended:true}))
-  
-//Routes
-app.get('/login', function (req, res) {
-    res.render('login')
-});
-
-app.get('/signup', function (req, res) {
-    res.render('signup')
-});
+app.use(express.urlencoded({extended:true}));
+app.use(cors());
+app.use(morgan('dev'));
 
 app.use('/users',users)
-
+app.use('/todos',todos)
 
 app.use((err,req,res,next)=>{
     //Resp to Client
@@ -49,13 +31,34 @@ app.use((err,req,res,next)=>{
 })
 
 //Start the Server
-const port = 3000
-app.listen(port,()=>{
-    console.log(`Server is listening to port number ${port}`);
+dbConfig.connection;
+app.listen(process.env.PORT,()=>{
+    console.log(`Server is listening to port number ${process.env.PORT}`);
 })
-
 module.exports = app;
 
+
+
+// function middleware(req,res,next){
+//     console.log("I am a middleware");
+//     next() 
+// }
+// app.use(middleware);
+
+//Routes
+// app.get('/login', function (req, res) {
+//     res.render('login')
+// });
+
+// app.get('/signup', function (req, res) {
+//     res.render('signup')
+// });
+
+
+//set view Engine
+// app.engine('html', cons.swig)
+// app.set('views', path.join(__dirname, 'views'));
+// app.set('view engine', 'html');
 
 
 

@@ -1,57 +1,81 @@
-const router         = require("express-promise-router");
 const jwt            = require('jsonwebtoken');
-const JWT_SECRET     = require('../configuration/index');
 const Users          = require('../models/users');
-const hashsed        = require('../helpers/hashPassword');
-
+const Todos = require("../models/todos");
+const bcrypt = require('bcrypt');
+const Joi = require('joi');
+const userSchema = require('../helpers/routeHelpers').authSchema;
+require('dotenv').config();
 
 module.exports = {
-    signUp: async (req,res,next)=>{ 
-            const email = req.body.email;
-            const password = req.body.password;
+    signUp: async (req,res)=>{
+        // console.log(userSchema)
+            const result = userSchema.validate(req.body);
+            // console.log(result)
+            if(result.error){
+                return res.status(500).send(result.error.details[0].message)
+            }
+            const email = result.value.email;
+            const password = result.value.password;
             //check if user exists with same email
             const isAlreadyExists = await Users.findOne({email});
             if(isAlreadyExists){
                 //403 Forbidden
                 return res.status(403).json({message:"User already exists,cannot be created again"})
             }else{
-                //create a user
-                const saltHash = hashsed.genPassword(password);
-                const salt =  saltHash.salt;
-                const hash =  saltHash.hash;
-                const newUser = new Users({email,salt,hash});
-                await newUser.save();
-                return res.status(200).json({success:true,msg:'User created with hashed pass'})
+            //create user
+            const hash = await bcrypt.hash(password,10); 
+            const newUser = new Users({
+                email,
+                password : hash
+            });
+            await newUser.save();
+            return res.status(200).json({success:true,msg:'User created Successfully'})
             }
     },
-    signIn: async (req,res,next)=>{
-                const email =  req.body.email;
-                const password = req.body.password;
-                const user = await Users.findOne({email});                     
-                if(user){
-                    const isValid = hashsed.validPassword(password,user.hash,user.salt) 
-                    if(isValid){
-                        jwt.sign({user},JWT_SECRET.jwtSecret,{expiresIn:'60s'},(err,token)=>{
-                            res.status(200).json({token:token});
-                        })
-                    }else{
-                        res.status(400).json({success:false,msg:"you have entered a wrong password"});
-                    }
+    signIn: async (req,res)=>{
+            const email =  req.body.email;
+            const password = req.body.password;
+            const user = await Users.findOne({email});                     
+            if(user){
+                const isValid = await bcrypt.compare(password,user.password);
+                if(isValid){
+                    jwt.sign({user},process.env.jwtSecret,{expiresIn:'180s'},(err,token)=>{
+                        res.status(200).json({token:token});
+                    })
                 }else{
-                        res.status(400).json({success:false,msg:"User doesn't exists"})
+                    res.status(400).json({success:false,msg:"you have entered a wrong password"});
                 }
+            }else{
+                    res.status(400).json({success:false,msg:"User doesn't exists"})
+            }
     },
-    secret: (req,res,next)=>{
-                res.status(200).json({success:true,msg:"Token is verified!"});
-                jwt.verify(req.token,JWT_SECRET.jwtSecret,(err,authData)=>{
-                    if(err){
-                        res.status(401).json({success:false,msg:"something went wrong!"});
-                    }else{
-                        res.status(200).json({success:true,msg:"Token is verified!"});
-                    }
-                })
+    getUser: async (req,res)=>{               
+            const _id = req.id;
+            const user = await Users.findOne({_id});
+            // console.log(user);     
+            res.status(200).json({success:true,msg:user});
+    }, 
+    userCreatesTodo: async (req,res)=>{
+            try{
+                const userId = req.params.userId;        
+                const todo     = new Todos(req.body);        
+                const user    = await Users.findById(userId);    
+                // console.log(user);
+                todo.user = user;
+                await todo.save();
+                user.todos.push(todo); 
+                await user.save();
+                res.status(200).json(user);
+            } catch(err){
+                res.send(err);
+            }
+           
     },
-    
+    getUserTodo: async (req,res)=>{
+            const {userId} = req.params;
+            const user     = await Users.findById(userId).populate('todos');
+            res.status(200).json(user);
+    }   
 }
 
 
