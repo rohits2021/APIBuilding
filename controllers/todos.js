@@ -3,7 +3,6 @@ const Users = require('../models/users');
 
 
 module.exports = {
-
     deleteTodo : async (req,res)=>{
         try{
             const todoId = req.params.todoId;
