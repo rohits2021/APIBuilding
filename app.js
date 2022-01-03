@@ -37,8 +37,6 @@ app.listen(process.env.PORT,()=>{
 })
 module.exports = app;
 
-
-
 // function middleware(req,res,next){
 //     console.log("I am a middleware");
 //     next() 

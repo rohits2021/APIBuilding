@@ -11,6 +11,11 @@ const usersSchema = new Schema({
         type:String,
         required: true,
     },
+    role: {
+        type:String,
+        default: 'user',
+        enum:['user','admin'],
+    },
     todos : [{
         type: Schema.Types.ObjectId,
         ref:'todos',
